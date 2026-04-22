@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>God Chosen Legion</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #f0d080;
+    --gold-dark: #7a5c1a;
+    --crimson: #8b1a1a;
+    --deep: #07060c;
+    --panel: rgba(13,11,20,0.94);
+    --text: #d4c5a9;
+    --white: #f5f0e8;
+    --border: rgba(201,168,76,0.25);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--deep);
+    color: var(--text);
+    font-family: 'Cormorant Garamond', serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    opacity:0.5; pointer-events:none; z-index:0;
+  }
+
+  #starfield {
+    position:fixed; top:0; left:0;
+    width:100%; height:100%;
+    z-index:0; pointer-events:none;
+  }
+
+  /* ========================
+     NAV
+  ======================== */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(7,6,12,0.92);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+
+  .nav-brand {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(10px, 1.8vw, 14px);
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text);
+    text-decoration: none;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+  }
+
+  .nav-links a:hover {
+    color: var(--gold);
+    border-color: var(--border);
+  }
+
+  .nav-links a.active {
+    color: var(--gold-light);
+    border-color: var(--border);
+  }
+
+  /* ========================
+     SHARED
+  ======================== */
+  .page-section {
+    display: none;
+    position: relative;
+    z-index: 1;
+    padding-top: 56px; /* nav height */
+    min-height: 100vh;
+  }
+  .page-section.active { display: block; }
+
+  .glow-line {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(201,168,76,0.4) 30%, rgba(201,168,76,0.7) 50%, rgba(201,168,76,0.4) 70%, transparent 100%);
+    position: relative; z-index: 2;
+  }
+
+  .orn-line { height:1px; width:80px; background:linear-gradient(90deg, transparent, var(--gold)); }
+  .orn-line.right { background:linear-gradient(90deg, var(--gold), transparent); }
+  .orn-diamond { width:8px; height:8px; background:var(--gold); transform:rotate(45deg); box-shadow:0 0 10px var(--gold); }
+
+  /* ========================
+     HOME PAGE
+  ======================== */
+  .hero {
+    position: relative;
+    min-height: calc(100vh - 56px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    z-index: 2;
+  }
+
+  .hero::before {
+    content:'';
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 40%, rgba(140,80,10,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 50% 80%, rgba(100,20,20,0.15) 0%, transparent 70%);
+    z-index:-1;
+  }
+
+  .emblem-ring { position:relative; width:180px; height:180px; margin-bottom:32px; }
+  .emblem-ring svg { width:100%; height:100%; animation:slowRotate 30s linear infinite; filter:drop-shadow(0 0 18px rgba(201,168,76,0.5)); }
+  .emblem-inner { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:56px; animation:pulse 4s ease-in-out infinite; filter:drop-shadow(0 0 12px var(--gold)); }
+
+  @keyframes slowRotate { to { transform:rotate(360deg); } }
+  @keyframes pulse {
+    0%,100% { opacity:0.85; transform:translate(-50%,-50%) scale(1); }
+    50% { opacity:1; transform:translate(-50%,-50%) scale(1.06); }
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(24px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  .clan-tag { font-family:'Cinzel',serif; font-size:11px; letter-spacing:6px; color:var(--gold); text-transform:uppercase; margin-bottom:12px; opacity:0.8; }
+  .clan-name { font-family:'Cinzel Decorative',serif; font-size:clamp(28px,6vw,62px); font-weight:900; color:var(--white); line-height:1.1; letter-spacing:2px; text-shadow:0 0 40px rgba(201,168,76,0.4),0 2px 4px rgba(0,0,0,0.8); margin-bottom:6px; animation:fadeUp 1.2s ease both; }
+  .clan-sub { font-family:'Cinzel',serif; font-size:clamp(12px,2.5vw,18px); color:var(--gold); letter-spacing:4px; margin-bottom:28px; animation:fadeUp 1.4s ease both; }
+  .divider { width:280px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:0 auto 28px; }
+
+  .motto-block { display:flex; flex-direction:column; gap:6px; margin-bottom:48px; animation:fadeUp 1.6s ease both; }
+  .motto { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:clamp(14px,2.5vw,19px); color:var(--gold-light); letter-spacing:2px; opacity:0.9; }
+  .motto.main { font-size:clamp(17px,3vw,24px); font-weight:600; color:var(--white); opacity:1; }
+
+  .nav-cta-row { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+  .cta-btn {
+    font-family:'Cinzel',serif; font-size:10px; letter-spacing:4px; text-transform:uppercase;
+    padding:12px 24px; border:1px solid var(--gold); color:var(--gold);
+    background:transparent; cursor:pointer; transition:all 0.25s;
+    text-decoration:none; display:inline-block;
+  }
+  .cta-btn:hover { background:rgba(201,168,76,0.12); color:var(--gold-light); }
+  .cta-btn.solid { background:rgba(201,168,76,0.15); }
+
+  /* home inner sections */
+  .home-inner { position:relative; z-index:2; max-width:1100px; margin:0 auto; padding:60px 20px; }
+
+  .sec-label { font-family:'Cinzel',serif; font-size:11px; letter-spacing:7px; text-transform:uppercase; color:var(--gold); text-align:center; margin-bottom:10px; opacity:0.7; }
+  .sec-heading { font-family:'Cinzel Decorative',serif; font-size:clamp(20px,3.5vw,32px); text-align:center; color:var(--white); margin-bottom:40px; text-shadow:0 0 20px rgba(201,168,76,0.3); }
+
+  .apex-row { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; margin-bottom:60px; }
+  .apex-card { background:var(--panel); border:1px solid var(--border); border-top:2px solid var(--gold); padding:28px 32px; text-align:center; flex:1; min-width:240px; max-width:360px; position:relative; overflow:hidden; transition:transform 0.3s,box-shadow 0.3s; }
+  .apex-card::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold-light),transparent); }
+  .apex-card:hover { transform:translateY(-4px); box-shadow:0 12px 40px rgba(201,168,76,0.2); }
+  .apex-rank { font-family:'Cinzel',serif; font-size:10px; letter-spacing:5px; color:var(--gold); text-transform:uppercase; margin-bottom:10px; opacity:0.7; }
+  .apex-title { font-family:'Cinzel Decorative',serif; font-size:clamp(13px,2vw,17px); color:var(--white); line-height:1.4; }
+  .crown-icon { font-size:32px; margin-bottom:14px; display:block; filter:drop-shadow(0 0 8px var(--gold)); }
+
+  .divisions-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:20px; }
+  .division-card { background:var(--panel); border:1px solid var(--border); padding:28px 24px; position:relative; overflow:hidden; transition:transform 0.3s,box-shadow 0.3s; cursor:default; }
+  .division-card::after { content:''; position:absolute; bottom:0;left:0;right:0; height:3px; background:linear-gradient(90deg,transparent,var(--accent-color,var(--gold)),transparent); opacity:0; transition:opacity 0.3s; }
+  .division-card:hover::after { opacity:1; }
+  .division-card:hover { transform:translateY(-5px); box-shadow:0 16px 48px rgba(0,0,0,0.5); }
+  .division-card.throne { --accent-color:#f0d080; }
+  .division-card.covenant { --accent-color:#8888ff; }
+  .division-card.warden { --accent-color:#e05050; }
+  .division-card.ember { --accent-color:#ff9944; }
+  .div-icon { font-size:38px; margin-bottom:14px; display:block; filter:drop-shadow(0 0 6px var(--accent-color,var(--gold))); }
+  .div-number { font-family:'Cinzel',serif; font-size:9px; letter-spacing:4px; color:var(--accent-color,var(--gold)); text-transform:uppercase; margin-bottom:6px; opacity:0.65; }
+  .div-name { font-family:'Cinzel Decorative',serif; font-size:clamp(12px,1.8vw,15px); color:var(--white); margin-bottom:4px; line-height:1.3; }
+  .div-rank-name { font-family:'Cinzel',serif; font-size:11px; letter-spacing:2px; color:var(--accent-color,var(--gold)); margin-bottom:14px; font-style:italic; }
+  .div-desc { font-size:14px; color:var(--text); line-height:1.7; margin-bottom:16px; font-style:italic; opacity:0.85; }
+  .div-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+  .tag { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; padding:4px 10px; border:1px solid rgba(201,168,76,0.25); color:var(--gold); text-transform:uppercase; opacity:0.75; }
+
+  .hierarchy { text-align:center; padding:50px 20px; position:relative; z-index:2; border-top:1px solid rgba(201,168,76,0.12); border-bottom:1px solid rgba(201,168,76,0.12); background:rgba(6,6,10,0.6); }
+  .hier-flow { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin-top:28px; }
+  .hier-item { font-family:'Cinzel',serif; font-size:clamp(10px,1.5vw,13px); letter-spacing:2px; color:var(--white); padding:10px 18px; border:1px solid var(--border); background:rgba(15,12,20,0.8); text-align:center; min-width:130px; }
+  .hier-item span { display:block; font-size:9px; color:var(--gold); letter-spacing:3px; margin-top:4px; opacity:0.7; }
+  .hier-arrow { color:var(--gold); font-size:18px; opacity:0.5; }
+
+  .mottos-section { text-align:center; position:relative; z-index:2; padding:70px 20px; }
+  .motto-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; max-width:900px; margin:0 auto; }
+  .motto-card { border:1px solid rgba(201,168,76,0.2); padding:24px 28px; min-width:200px; flex:1; max-width:280px; background:linear-gradient(135deg,rgba(12,10,18,0.95),rgba(20,14,10,0.9)); position:relative; }
+  .motto-card::before { content:'"'; position:absolute; top:8px;left:14px; font-size:48px; color:var(--gold); opacity:0.15; font-family:'Cinzel Decorative',serif; line-height:1; }
+  .motto-text { font-family:'Cinzel',serif; font-size:clamp(12px,2vw,15px); color:var(--gold-light); letter-spacing:2px; line-height:1.5; }
+
+  /* ========================
+     RULES PAGE
+  ======================== */
+  .rules-page { padding: 70px 20px 80px; max-width:860px; margin:0 auto; }
+
+  .page-header { text-align:center; padding:40px 0 44px; }
+  .header-ornament { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:20px; }
+  .org-label { font-family:'Cinzel',serif; font-size:10px; letter-spacing:6px; color:var(--gold); opacity:0.65; margin-bottom:10px; text-transform:uppercase; }
+  .page-h1 { font-family:'Cinzel Decorative',serif; font-size:clamp(22px,5vw,46px); font-weight:900; color:var(--white); line-height:1.15; text-shadow:0 0 30px rgba(201,168,76,0.35),0 2px 6px rgba(0,0,0,0.9); margin-bottom:8px; }
+  .page-subtitle { font-family:'Cinzel',serif; font-size:clamp(11px,2vw,14px); letter-spacing:5px; color:var(--gold); margin-bottom:22px; opacity:0.8; }
+  .header-verse { font-style:italic; font-size:15px; color:var(--text); opacity:0.65; max-width:500px; margin:0 auto; line-height:1.7; }
+
+  .scroll-section { background:var(--panel); border:1px solid var(--border); margin-bottom:32px; position:relative; overflow:hidden; opacity:0; transform:translateY(24px); transition:opacity 0.55s ease,transform 0.55s ease; }
+  .scroll-section.visible { opacity:1; transform:translateY(0); }
+  .scroll-section::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+
+  .section-header { display:flex; align-items:center; gap:14px; padding:22px 28px 18px; border-bottom:1px solid var(--border); }
+  .section-icon { font-size:28px; filter:drop-shadow(0 0 6px var(--gold)); flex-shrink:0; }
+  .section-meta { flex:1; }
+  .section-label { font-family:'Cinzel',serif; font-size:9px; letter-spacing:5px; color:var(--gold); opacity:0.6; text-transform:uppercase; margin-bottom:3px; }
+  .section-title { font-family:'Cinzel Decorative',serif; font-size:clamp(14px,2.5vw,20px); color:var(--white); line-height:1.2; }
+
+  .rules-list { padding:10px 0 6px; }
+  .rule-item { display:grid; grid-template-columns:54px 1fr; border-bottom:1px solid rgba(201,168,76,0.08); transition:background 0.2s; }
+  .rule-item:last-child { border-bottom:none; }
+  .rule-item:hover { background:rgba(201,168,76,0.04); }
+  .rule-num { display:flex; align-items:flex-start; justify-content:center; padding:20px 0 18px; font-family:'Cinzel',serif; font-size:11px; color:var(--gold); opacity:0.5; letter-spacing:1px; }
+  .rule-content { padding:16px 24px 16px 4px; }
+  .rule-title { font-family:'Cinzel',serif; font-size:clamp(12px,1.8vw,14px); color:var(--white); letter-spacing:1px; margin-bottom:5px; }
+  .rule-body { font-size:clamp(13px,2vw,15px); color:var(--text); line-height:1.75; opacity:0.88; }
+
+  .commandments-list { padding:6px 0; }
+  .cmd-item { display:grid; grid-template-columns:48px 1fr; border-bottom:1px solid rgba(201,168,76,0.08); transition:background 0.2s; }
+  .cmd-item:last-child { border-bottom:none; }
+  .cmd-item:hover { background:rgba(201,168,76,0.04); }
+  .cmd-num { display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:13px; color:var(--gold); padding:18px 0; border-right:1px solid rgba(201,168,76,0.12); }
+  .cmd-text { padding:16px 24px 16px 20px; font-size:clamp(13px,2vw,16px); color:var(--white); line-height:1.7; }
+  .cmd-text em { font-style:normal; color:var(--gold-light); font-weight:600; }
+
+  .corner { position:absolute; width:22px; height:22px; border-color:var(--gold); border-style:solid; opacity:0.35; }
+  .corner.tl { top:0;left:0; border-width:1px 0 0 1px; }
+  .corner.tr { top:0;right:0; border-width:1px 1px 0 0; }
+  .corner.bl { bottom:0;left:0; border-width:0 0 1px 1px; }
+  .corner.br { bottom:0;right:0; border-width:0 1px 1px 0; }
+
+  /* ========================
+     FOOTER
+  ======================== */
+  .site-footer { position:relative; z-index:2; text-align:center; padding:32px 20px; border-top:1px solid rgba(201,168,76,0.15); }
+  .site-footer p { font-family:'Cinzel',serif; font-size:10px; letter-spacing:5px; color:var(--gold); opacity:0.45; text-transform:uppercase; margin-bottom:4px; }
+
+  /* fade-in for home cards */
+  .fade-card { opacity:0; transform:translateY(20px); transition:opacity 0.6s ease,transform 0.6s ease; }
+  .fade-card.visible { opacity:1; transform:translateY(0); }
+
+  @media (max-width: 600px) {
+    .nav-links a { padding:8px 7px; font-size:9px; letter-spacing:2px; }
+    .nav-brand { font-size:9px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a class="nav-brand" href="#" onclick="showPage('home')">⚜ GCL</a>
+    <ul class="nav-links">
+      <li><a href="#" onclick="showPage('home')" id="nav-home" class="active">Home</a></li>
+      <li><a href="#" onclick="showPage('divisions')" id="nav-divisions">Divisions</a></li>
+      <li><a href="#" onclick="showPage('rules')" id="nav-rules">Covenant Code</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ===================== HOME ===================== -->
+<div id="page-home" class="page-section active">
+
+  <div class="hero">
+    <div class="emblem-ring">
+      <svg viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="90" cy="90" r="82" fill="none" stroke="#c9a84c" stroke-width="1" stroke-dasharray="4 6" opacity="0.5"/>
+        <circle cx="90" cy="90" r="70" fill="none" stroke="#c9a84c" stroke-width="0.5" opacity="0.3"/>
+        <g fill="#c9a84c" opacity="0.7">
+          <polygon points="90,8 93,18 90,14 87,18" transform="rotate(0,90,90)"/>
+          <polygon points="90,8 93,18 90,14 87,18" transform="rotate(45,90,90)"/>
+          <polygon points="90,8 93,18 90,14 87,18" transform="rotate(90,90,90)"/>
+          <polygon points="90,8 93,18 90,14 87,18" transform="rotate(135,90,90)"/>
+          <polygon points="90,8 93,18 90,14 87,18" transform="rotate(180,90,90)"/>
+          <polygon points="90,8 93,18 90,14 87,18" transform="rotate(225,90,90)"/>
+          <polygon points="90,8 93,18 90,14 87,18" transform="rotate(270,90,90)"/>
+          <polygon points="90,8 93,18 90,14 87,18" transform="rotate(315,90,90)"/>
+        </g>
+        <text x="90" y="160" text-anchor="middle" font-family="Cinzel" font-size="7" fill="#c9a84c" letter-spacing="3" opacity="0.6">GOD CHOSEN LEGION</text>
+      </svg>
+      <div class="emblem-inner">✦</div>
+    </div>
+    <div class="clan-tag">Star Citizen · Organization</div>
+    <h1 class="clan-name">God Chosen Legion</h1>
+    <div class="clan-sub">Under One Throne</div>
+    <div class="divider"></div>
+    <div class="motto-block">
+      <div class="motto main">Chosen. Bound. Eternal.</div>
+      <div class="motto">By Covenant, We Stand.</div>
+      <div class="motto">Forged in Light. Proven in Fire.</div>
+    </div>
+    <div class="nav-cta-row">
+      <a class="cta-btn solid" href="#" onclick="showPage('divisions')">View Divisions</a>
+      <a class="cta-btn" href="#" onclick="showPage('rules')">Covenant Code</a>
+    </div>
+  </div>
+
+  <div class="glow-line"></div>
+
+  <!-- APEX -->
+  <div class="home-inner">
+    <div class="sec-label">Supreme Command</div>
+    <div class="sec-heading">Apex Leadership</div>
+    <div class="apex-row">
+      <div class="apex-card fade-card">
+        <span class="crown-icon">👑</span>
+        <div class="apex-rank">Covenant Leader</div>
+        <div class="apex-title">Apex Solstice</div>
+      </div>
+      <div class="apex-card fade-card">
+        <span class="crown-icon">⛪</span>
+        <div class="apex-rank">Head of the Church</div>
+        <div class="apex-title">Apex Zenith</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOTTOS -->
+  <div class="mottos-section">
+    <div class="sec-label">Words We Live By</div>
+    <div class="sec-heading">The Covenant Creeds</div>
+    <div class="motto-grid">
+      <div class="motto-card fade-card"><div class="motto-text">Chosen.<br>Bound.<br>Eternal.</div></div>
+      <div class="motto-card fade-card"><div class="motto-text">By Covenant,<br>We Stand.</div></div>
+      <div class="motto-card fade-card"><div class="motto-text">Forged in Light.<br>Proven in Fire.</div></div>
+      <div class="motto-card fade-card" style="flex-basis:100%;max-width:380px;"><div class="motto-text" style="font-size:clamp(15px,2.5vw,20px);color:#f0d080;">Under One Throne</div></div>
+    </div>
+  </div>
+
+  <div class="glow-line"></div>
+  <div class="site-footer"><p>God Chosen Legion · Star Citizen · Chosen. Bound. Eternal.</p></div>
+</div>
+
+<!-- ===================== DIVISIONS ===================== -->
+<div id="page-divisions" class="page-section">
+
+  <div class="home-inner">
+    <div style="height:20px;"></div>
+    <div class="sec-label">The Four Pillars</div>
+    <div class="sec-heading">Division Structure</div>
+
+    <div class="divisions-grid">
+      <div class="division-card throne fade-card">
+        <span class="div-icon">⚜️</span>
+        <div class="div-number">Division I</div>
+        <div class="div-name">Throne Division</div>
+        <div class="div-rank-name">Celestial Shepherd of the Eternal Throne</div>
+        <div class="div-desc">Command & Vision. Closest to God's authority — calm, wise, untouchable. Sets missions, purpose, and unity for all.</div>
+        <div class="div-tags"><span class="tag">Leadership</span><span class="tag">Doctrine</span><span class="tag">Inner Circle</span></div>
+      </div>
+      <div class="division-card covenant fade-card">
+        <span class="div-icon">🔱</span>
+        <div class="div-number">Division II</div>
+        <div class="div-name">Covenant Division</div>
+        <div class="div-rank-name">High Sovereign of the Cosmic Covenant</div>
+        <div class="div-desc">Strategy & Control. Commanders and tacticians who organize operations and maintain discipline. Authority with structure.</div>
+        <div class="div-tags"><span class="tag">Strategy</span><span class="tag">Command</span><span class="tag">Order</span></div>
+      </div>
+      <div class="division-card warden fade-card">
+        <span class="div-icon">⚔️</span>
+        <div class="div-number">Division III</div>
+        <div class="div-name">Warden Division</div>
+        <div class="div-rank-name">Supreme Warden of the Infinite Faith</div>
+        <div class="div-desc">Combat & Enforcement. The sword and shield of the Legion. Frontline PvP, escorts, and protection of all assets.</div>
+        <div class="div-tags"><span class="tag">PvP</span><span class="tag">Security</span><span class="tag">Frontline</span></div>
+      </div>
+      <div class="division-card ember fade-card">
+        <span class="div-icon">🔥</span>
+        <div class="div-number">Division IV</div>
+        <div class="div-name">Ember Division</div>
+        <div class="div-rank-name">Thronebearer of the Radiant Covenant</div>
+        <div class="div-desc">Growth & Support. The rising generation — potential and fire waiting to grow. Mining, hauling, training, proving loyalty.</div>
+        <div class="div-tags"><span class="tag">Recruit</span><span class="tag">Mining</span><span class="tag">Hauling</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hierarchy">
+    <div class="sec-label">Chain of Authority</div>
+    <div class="sec-heading" style="font-size:clamp(16px,2.5vw,24px);">The Legion Order</div>
+    <div class="hier-flow">
+      <div class="hier-item fade-card">Throne Division<span>Lead the Legion</span></div>
+      <div class="hier-arrow">→</div>
+      <div class="hier-item fade-card">Covenant Marshals<span>Run the Legion</span></div>
+      <div class="hier-arrow">→</div>
+      <div class="hier-item fade-card">Faith Wardens<span>Defend the Legion</span></div>
+      <div class="hier-arrow">→</div>
+      <div class="hier-item fade-card">Ember Bearers<span>Become the Legion</span></div>
+    </div>
+  </div>
+
+  <div class="glow-line"></div>
+  <div class="site-footer"><p>God Chosen Legion · Star Citizen · Chosen. Bound. Eternal.</p></div>
+</div>
+
+<!-- ===================== RULES ===================== -->
+<div id="page-rules" class="page-section">
+  <div class="rules-page">
+
+    <div class="page-header">
+      <div class="header-ornament">
+        <div class="orn-line"></div><div class="orn-diamond"></div><div class="orn-line right"></div>
+      </div>
+      <div class="org-label">God Chosen Legion · Official Covenant</div>
+      <h1 class="page-h1">The Covenant Code</h1>
+      <div class="page-subtitle">Legion Laws &amp; Sacred Commandments</div>
+      <div class="header-ornament" style="margin-top:18px;margin-bottom:16px;">
+        <div class="orn-line"></div><div class="orn-diamond"></div><div class="orn-line right"></div>
+      </div>
+      <div class="header-verse">"Let all things be done decently and in order." — 1 Corinthians 14:40</div>
+    </div>
+
+    <!-- LEGION RULES -->
+    <div class="scroll-section">
+      <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      <div class="section-header">
+        <div class="section-icon">📜</div>
+        <div class="section-meta">
+          <div class="section-label">Part I · Organization Standards</div>
+          <div class="section-title">Legion Rules of Conduct</div>
+        </div>
+      </div>
+      <div class="rules-list">
+
+        <div class="rule-item"><div class="rule-num">I</div><div class="rule-content">
+          <div class="rule-title">Honorable Language</div>
+          <div class="rule-body">We ask that all members keep their language clean and respectful at all times. Profanity has no place within these ranks — our words reflect who we are and Whose we are.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">II</div><div class="rule-content">
+          <div class="rule-title">Wholesome Conduct</div>
+          <div class="rule-body">Lewd, inappropriate, or sexually suggestive humor is not welcome here. We hold ourselves to a standard that creates a safe and dignified environment for every member.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">III</div><div class="rule-content">
+          <div class="rule-title">Patience Above All</div>
+          <div class="rule-body">Patience is not just a virtue — it is a requirement. Every member deserves to be heard, taught, and treated with grace. We grow together, and that takes time.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">IV</div><div class="rule-content">
+          <div class="rule-title">Respect the Chain of Command</div>
+          <div class="rule-body">Our structure exists for a reason. Please honor and follow the chain of command. Direction flows from leadership down, and that order keeps the Legion unified and effective.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">V</div><div class="rule-content">
+          <div class="rule-title">No Gossip</div>
+          <div class="rule-body">Gossip tears communities apart. Speaking negatively about fellow members behind closed doors will not be tolerated. If you have concerns, bring them forward properly — we address things with integrity.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">VI</div><div class="rule-content">
+          <div class="rule-title">Proper Channels for Complaints</div>
+          <div class="rule-body">Every complaint and grievance is valued and deserves to be heard. All such matters will be handled through a private, respectful staff sit-down. Public disputes do not serve anyone well — please trust the process.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">VII</div><div class="rule-content">
+          <div class="rule-title">Final Authority</div>
+          <div class="rule-body">The Spiritual Leader and Org Leader hold final say in all matters. Their decisions are made with the Legion's best interests at heart. Please extend them the trust and respect their position carries.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">VIII</div><div class="rule-content">
+          <div class="rule-title">No Unnecessary Drama</div>
+          <div class="rule-body">Conflicts are part of life — but they must be brought to the proper channels to be resolved. Drama that is stirred up and not submitted to leadership will not be permitted to fester within this community.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">IX</div><div class="rule-content">
+          <div class="rule-title">Unresolved Conflict</div>
+          <div class="rule-body">If a conflict between members escalates beyond what leadership can mediate and resolution cannot be reached, both parties may be removed from the Legion. Unity comes before any individual dispute.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">X</div><div class="rule-content">
+          <div class="rule-title">One Faith, One Foundation</div>
+          <div class="rule-body">The God Chosen Legion is built on the Christian faith. Out of respect for our foundation and purpose, discussions promoting other religions or teachings contrary to sound Christian doctrine are not permitted within our community.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">XI</div><div class="rule-content">
+          <div class="rule-title">The Holy Spirit Leads</div>
+          <div class="rule-body">We believe the Holy Spirit guides us into all truth. In matters of spiritual discernment and major decisions, His leading holds the highest authority. We trust His judgment above our own reasoning.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">XII</div><div class="rule-content">
+          <div class="rule-title">Protect the Uninformed</div>
+          <div class="rule-body">Never look down on or belittle someone simply because they don't know something yet. Everyone begins somewhere. It is our privilege to guide, teach, and lift up — not to mock or diminish.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">XIII</div><div class="rule-content">
+          <div class="rule-title">Rank Is Responsibility</div>
+          <div class="rule-body">A title within this Legion is not a trophy to display — it is a calling to serve. Every rank comes with real responsibility and real work. Any misuse of authority or power for personal gain will be addressed swiftly.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">XIV</div><div class="rule-content">
+          <div class="rule-title">Spiritual Disciplines Encouraged</div>
+          <div class="rule-body">Reading scripture and prayer are not mandatory, but they are deeply encouraged. These disciplines strengthen who we are as individuals and as a community. We welcome every step of growth, however small.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">XV</div><div class="rule-content">
+          <div class="rule-title">Activity Is Required</div>
+          <div class="rule-body">To maintain a healthy, functioning organization both in Discord and in-game, regular activity is required of all members. An active presence ensures we remain structured, connected, and ready in the field.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">XVI</div><div class="rule-content">
+          <div class="rule-title">Ranks Are Earned</div>
+          <div class="rule-body">Advancement in rank is based on demonstrated competency and the genuine need of the Legion — not on time served, popularity, or personal relationships. Earn your place through character and capability.</div>
+        </div></div>
+
+        <div class="rule-item"><div class="rule-num">XVII</div><div class="rule-content">
+          <div class="rule-title">Division Sovereignty</div>
+          <div class="rule-body">Each division operates within its own lane and handles its own matters independently. Divisions are not to be overstepped, bypassed, or interfered with outside of proper authority. Respect the structure that has been set in place.</div>
+        </div></div>
+
+      </div>
+    </div>
+
+    <!-- TEN COMMANDMENTS -->
+    <div class="scroll-section">
+      <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      <div class="section-header">
+        <div class="section-icon">🕊️</div>
+        <div class="section-meta">
+          <div class="section-label">Part II · The Church's Rules</div>
+          <div class="section-title">The Ten Commandments</div>
+        </div>
+      </div>
+      <div class="commandments-list">
+        <div class="cmd-item"><div class="cmd-num">I</div><div class="cmd-text"><em>You shall have no other gods before Me.</em></div></div>
+        <div class="cmd-item"><div class="cmd-num">II</div><div class="cmd-text"><em>You shall not make for yourself any idol,</em> nor bow down to or worship it in any form.</div></div>
+        <div class="cmd-item"><div class="cmd-num">III</div><div class="cmd-text"><em>You shall not take the name of the Lord your God in vain.</em></div></div>
+        <div class="cmd-item"><div class="cmd-num">IV</div><div class="cmd-text"><em>Remember the Sabbath day, to keep it holy.</em> Six days you shall labor, but the seventh is set apart for rest and worship.</div></div>
+        <div class="cmd-item"><div class="cmd-num">V</div><div class="cmd-text"><em>Honor your father and your mother,</em> that your days may be long upon the land the Lord your God is giving you.</div></div>
+        <div class="cmd-item"><div class="cmd-num">VI</div><div class="cmd-text"><em>You shall not murder.</em></div></div>
+        <div class="cmd-item"><div class="cmd-num">VII</div><div class="cmd-text"><em>You shall not commit adultery.</em></div></div>
+        <div class="cmd-item"><div class="cmd-num">VIII</div><div class="cmd-text"><em>You shall not steal.</em></div></div>
+        <div class="cmd-item"><div class="cmd-num">IX</div><div class="cmd-text"><em>You shall not bear false witness</em> against your neighbor.</div></div>
+        <div class="cmd-item"><div class="cmd-num">X</div><div class="cmd-text"><em>You shall not covet</em> your neighbor's house, spouse, servants, or anything that belongs to your neighbor.</div></div>
+      </div>
+    </div>
+
+    <div class="site-footer" style="border-top:1px solid var(--border);padding-top:32px;">
+      <p>Chosen · Bound · Eternal</p>
+      <p>By Covenant, We Stand · Under One Throne</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ---- Starfield ----
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+  function initStars(){
+    stars=[];
+    const n=Math.floor(canvas.width*canvas.height/3800);
+    for(let i=0;i<n;i++) stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.3,a:Math.random()*0.6+0.1,ph:Math.random()*Math.PI*2,sp:Math.random()*0.015+0.005});
+  }
+  let t=0;
+  function drawStars(){
+    ctx.clearRect(0,0,canvas.width,canvas.height); t+=0.006;
+    for(const s of stars){ const a=s.a*(0.5+0.5*Math.sin(t*s.sp*60+s.ph)); ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fillStyle=`rgba(240,215,150,${a})`; ctx.fill(); }
+    requestAnimationFrame(drawStars);
+  }
+  resize(); initStars(); drawStars();
+  window.addEventListener('resize',()=>{resize();initStars();});
+
+  // ---- Page navigation ----
+  function showPage(name) {
+    document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    document.getElementById('nav-' + name).classList.add('active');
+    window.scrollTo(0,0);
+    // trigger fade-ins for newly shown page
+    setTimeout(() => observePage(), 80);
+    return false;
+  }
+
+  // ---- Scroll/instant reveal ----
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); } });
+  },{threshold:0.06});
+
+  function observePage(){
+    document.querySelectorAll('.scroll-section, .fade-card').forEach(el => {
+      obs.observe(el);
+    });
+  }
+  observePage();
+</script>
+</body>
+</html>
